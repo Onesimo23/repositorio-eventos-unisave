@@ -74,7 +74,8 @@
                     <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
                 </li>
                 <li class="nav-item d-none d-sm-inline-block">
-                    <a href="{{ route('index') }}" class="nav-link">Pagina inicial</a>
+                    <a href="{{ route('home') }}" class="nav-link">Pagina inicial</a>
+                </li>
             </ul>
 
             <!-- Right navbar links -->
@@ -183,7 +184,7 @@
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="/events" class="nav-link">
+                                    <a href="/eventos" class="nav-link">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Todos os Eventos</p>
                                     </a>

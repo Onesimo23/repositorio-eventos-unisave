@@ -1102,8 +1102,20 @@
                 <li><a href="#" id="search-trigger">
                         <i class="fas fa-search"></i>
                     </a></li>
+
+                @guest
                 <li><a href="{{ route('login') }}" class="login-btn">Login</a></li>
                 <li><a href="{{ route('register') }}" class="register-btn">Register</a></li>
+                @endguest
+
+                @auth
+                <li>
+                    <a href="{{ route('dashboard') }}" class="login-btn">
+                        Entrar como {{ auth()->user()->name }}
+                    </a>
+                </li>
+                @endauth
+
             </ul>
         </nav>
     </header>
@@ -1156,42 +1168,44 @@
         </div>
     </section>
     <br>
+
     <!-- Destaques da Semana -->
     <section class="highlights container">
-        <h2> Destaques da Semana</h2>
+        <h2>Destaques da Semana</h2>
         <div class="highlights-grid">
             <!-- Destaque Principal -->
             <div class="highlight-main">
+                @if($eventoDestaque)
                 <div class="highlight-content">
                     <span class="highlight-tag">Em Destaque</span>
-                    <h3>Semana Acadêmica de Tecnologia</h3>
-                    <p>Uma semana inteira dedicada à inovação e tecnologia, com palestras, workshops e apresentações.</p>
+                    <h3>{{ $eventoDestaque->titulo }}</h3>
+                    <p>{{ $eventoDestaque->descricao }}</p>
                     <div class="highlight-info">
-                        <span>📅 15-20 de Setembro</span>
-                        <span>📍 Sala 5, UniSave</span>
+                        <span>📅 {{ \Carbon\Carbon::parse($eventoDestaque->data)->format('d/m/Y') }} {{ $eventoDestaque->hora }}</span>
+                        <span>📍 {{ $eventoDestaque->local }}</span>
                     </div>
-                    <a href="#" class="highlight-btn">Saiba Mais</a>
+                    <a href="{{ route('eventos.show', $eventoDestaque->id) }}" class="highlight-btn">Saiba Mais</a>
                 </div>
+                @else
+                <p>Nenhum evento em destaque no momento.</p>
+                @endif
             </div>
 
             <!-- Destaques Secundários -->
             <div class="highlight-secondary">
                 <h4>Próximos Destaques</h4>
                 <div class="highlight-list">
+                    @forelse($eventosSecundarios as $evento)
                     <div class="highlight-item">
-                        <span class="date">22 SET</span>
+                        <span class="date">{{ \Carbon\Carbon::parse($evento->data)->format('d M') }}</span>
                         <div class="info">
-                            <h5>Feira de Ciências</h5>
-                            <p>Exposição de projetos científicos dos estudantes</p>
+                            <h5>{{ $evento->titulo }}</h5>
+                            <p>{{ $evento->descricao }}</p>
                         </div>
                     </div>
-                    <div class="highlight-item">
-                        <span class="date">25 SET</span>
-                        <div class="info">
-                            <h5>Simpósio de Pesquisa</h5>
-                            <p>Apresentação de trabalhos acadêmicos</p>
-                        </div>
-                    </div>
+                    @empty
+                    <p>Sem próximos eventos no momento.</p>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -1201,145 +1215,71 @@
     <section class="events-section container" id="proximos-eventos">
         <h2>📅 Próximos Eventos</h2>
         <div class="events-grid">
-            <!-- Evento 1 -->
-            <div class="event-card" data-event-id="1">
-                <div class="event-image">🎤</div>
+            @forelse($eventosProximos as $evento)
+            <div class="event-card" data-event-id="{{ $evento->id }}">
+                <div class="event-image">
+                    {{-- Se tiver imagem no banco, mostra; senão põe emoji genérico --}}
+                    @if($evento->imagem)
+                    <img src="{{ asset('storage/'.$evento->imagem) }}" alt="{{ $evento->titulo }}" style="width:100%; border-radius:8px;">
+                    @else
+                    🎉
+                    @endif
+                </div>
                 <div class="event-content">
-                    <h3 class="event-title">Palestra: Inteligência Artificial na Educação</h3>
+                    <h3 class="event-title">{{ $evento->titulo }}</h3>
                     <div class="event-details">
                         <div class="event-detail">
                             <span>📅</span>
-                            <span>25 de Agosto, 2025 - 14:00</span>
+                            <span>{{ \Carbon\Carbon::parse($evento->data)->translatedFormat('d \d\e F, Y') }} - {{ $evento->hora }}</span>
                         </div>
                         <div class="event-detail">
                             <span>📍</span>
-                            <span>Sala 5, Universidade Save, Chongoene</span>
+                            <span>{{ $evento->local }}</span>
                         </div>
                         <div class="event-detail">
                             <span>👤</span>
-                            <span>Prof. Dr. Cláudio Nhancale</span>
+                            <span>{{ $evento->organizador ?? 'Organizador não definido' }}</span>
                         </div>
                     </div>
-                    <a href="#" class="event-btn">Ver Detalhes</a>
+                    <a href="{{ route('eventos.show', $evento->id) }}" class="event-btn">Ver Detalhes</a>
                 </div>
             </div>
+            @empty
+            <p>Nenhum evento disponível.</p>
+            @endforelse
+        </div>
+    </section>
 
-            <!-- Evento 2 -->
-            <div class="event-card" data-event-id="2">
-                <div class="event-image">🔧</div>
-                <div class="event-content">
-                    <h3 class="event-title">Workshop: Programação em Python</h3>
-                    <div class="event-details">
-                        <div class="event-detail">
-                            <span>📅</span>
-                            <span>28 de Agosto, 2025 - 09:00</span>
-                        </div>
-                        <div class="event-detail">
-                            <span>📍</span>
-                            <span>Laboratório de Informática - Bloco B</span>
-                        </div>
-                        <div class="event-detail">
-                            <span>👤</span>
-                            <span>Prof. Ana Verdial</span>
-                        </div>
-                    </div>
-                    <a href="#" class="event-btn">Ver Detalhes</a>
+    <!-- Modal de Detalhes -->
+    <div class="modal fade" id="showEventoModal{{ $evento->id }}" tabindex="-1" role="dialog" aria-labelledby="showEventoModalLabel{{ $evento->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ $evento->titulo }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-            </div>
-
-            <!-- Evento 3 -->
-            <div class="event-card" data-event-id="3">
-                <div class="event-image">📊</div>
-                <div class="event-content">
-                    <h3 class="event-title">Seminário: Gestão de Projetos Ágeis</h3>
-                    <div class="event-details">
-                        <div class="event-detail">
-                            <span>📅</span>
-                            <span>30 de Agosto, 2025 - 16:00</span>
-                        </div>
-                        <div class="event-detail">
-                            <span>📍</span>
-                            <span>Sala de Conferências - Massinga</span>
-                        </div>
-                        <div class="event-detail">
-                            <span>👤</span>
-                            <span>Prof. Carlos Mendes</span>
-                        </div>
-                    </div>
-                    <a href="#" class="event-btn">Ver Detalhes</a>
+                <div class="modal-body">
+                    @if($evento->imagem)
+                    <img src="{{ asset('storage/'.$evento->imagem) }}"
+                        alt="{{ $evento->titulo }}"
+                        style="width:100%; border-radius: 8px; margin-bottom: 15px;">
+                    @endif
+                    <p><strong>Descrição:</strong> {{ $evento->descricao }}</p>
+                    <p><strong>Data:</strong> {{ \Carbon\Carbon::parse($evento->data)->translatedFormat('d \d\e F, Y') }}</p>
+                    <p><strong>Hora:</strong> {{ $evento->hora }}</p>
+                    <p><strong>Local:</strong> {{ $evento->local }}</p>
+                    <p><strong>Organizador:</strong> {{ $evento->organizador }}</p>
+                    <p><strong>Status:</strong> {{ ucfirst($evento->status) }}</p>
                 </div>
-            </div>
-
-            <!-- Evento 4 -->
-            <div class="event-card" data-event-id="4">
-                <div class="event-image">🌱</div>
-                <div class="event-content">
-                    <h3 class="event-title">Conferência: Sustentabilidade e Tecnologia</h3>
-                    <div class="event-details">
-                        <div class="event-detail">
-                            <span>📅</span>
-                            <span>02 de Setembro, 2025 - 10:00</span>
-                        </div>
-                        <div class="event-detail">
-                            <span>📍</span>
-                            <span>Centro de Convenções UniSave</span>
-                        </div>
-                        <div class="event-detail">
-                            <span>👤</span>
-                            <span>MSc: Narcisio Mula</span>
-                        </div>
-                    </div>
-                    <a href="#" class="event-btn">Ver Detalhes</a>
-                </div>
-            </div>
-
-            <!-- Evento 5 -->
-            <div class="event-card" data-event-id="5">
-                <div class="event-image">💡</div>
-                <div class="event-content">
-                    <h3 class="event-title">Mesa Redonda: Inovação Tecnológica</h3>
-                    <div class="event-details">
-                        <div class="event-detail">
-                            <span>📅</span>
-                            <span>05 de Setembro, 2025 - 14:30</span>
-                        </div>
-                        <div class="event-detail">
-                            <span>📍</span>
-                            <span>Auditório do Centro Tecnológico</span>
-                        </div>
-                        <div class="event-detail">
-                            <span>👤</span>
-                            <span>Vários Palestrantes</span>
-                        </div>
-                    </div>
-                    <a href="#" class="event-btn">Ver Detalhes</a>
-                </div>
-            </div>
-
-            <!-- Evento 6 -->
-            <div class="event-card" data-event-id="6">
-                <div class="event-image">🎓</div>
-                <div class="event-content">
-                    <h3 class="event-title">Workshop: Metodologias de Pesquisa</h3>
-                    <div class="event-details">
-                        <div class="event-detail">
-                            <span>📅</span>
-                            <span>08 de Setembro, 2025 - 13:00</span>
-                        </div>
-                        <div class="event-detail">
-                            <span>📍</span>
-                            <span>Biblioteca Central - Sala 201</span>
-                        </div>
-                        <div class="event-detail">
-                            <span>👤</span>
-                            <span>MSc: Narcisio Mula</span>
-                        </div>
-                    </div>
-                    <a href="#" class="event-btn">Ver Detalhes</a>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+
 
     <!-- Template do Modal atualizado -->
     <div class="modal" id="event-modal">
